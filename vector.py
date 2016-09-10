@@ -2,10 +2,10 @@ import math
 from decimal import *
 
 getcontext()
-Context(prec=10, rounding=ROUND_HALF_DOWN, Emin=-999999999, Emax=999999999,
+Context(prec=6, rounding=ROUND_HALF_EVEN, Emin=-999999999, Emax=999999999,
         capitals=1, flags=[], traps=[Overflow, DivisionByZero,
         InvalidOperation])
-getcontext().prec=10
+getcontext().prec=6
 class Vector(object):
 
     CANNOT_NORMALIZE_ZERO_VECTOR_MSG = 'Cannot normalize the zero vector'
@@ -103,6 +103,9 @@ class Vector(object):
     def is_zero(self, tolerance=1e-10):
         return self.magnitude() < tolerance
 
+    # Check whether two vectors are parallel to each other
+    # by verifying if the angle they form is equal to 0 or
+    # 180 degrees
     def is_parallel_to(self, vector):
         return (self.is_zero() or
                 vector.is_zero() or
@@ -118,22 +121,61 @@ class Vector(object):
     def is_orthogonal_to(self, vector, tolerance=1e-10):
         return abs(self.dot(vector)) < tolerance
 
-v1 = Vector([-7.579, -7.88])
-v2 = Vector([22.737, 23.64])
-print (v1.is_parallel_to(v2))
-print (v1.is_orthogonal_to(v2))
+    # Finds out the Vector which is the parallel
+    # projection of self to a basis vector
+    # 'proj b (v) or v||'
+    def component_parallel_to(self, basis):
+        norm_b = basis.normalized()
+        weight = self.dot(norm_b)
+        return norm_b.times_scalar(weight)
 
-v3 = Vector([-2.029, 9.97, 4.172])
-v4 = Vector([-9.231, -6.639, -7.245])
-print (v3.is_parallel_to(v4))
-print (v3.is_orthogonal_to(v4))
+    # Finds out the Vector which is the orthogonal
+    # projection of self to a basis vector
+    # 'v perp'
+    def component_orthogonal_to(self, basis):
+        proj = self.component_parallel_to(basis)
+        return self.minus(proj)
 
-v5 = Vector([-2.328, -7.284, -1.214])
-v6 = Vector([-1.821, 1.072, -2.94])
-print (v5.is_parallel_to(v6))
-print (v5.is_orthogonal_to(v6))
+    # Finds out the 'cross product' between 2 Vectors.
+    # Cross Product is a vector which is orthogonal
+    # (perpendicular) to both vectors
+    def cross(self, v):
+        try:
+            x_1, y_1, z_1 = self.coordinates
+            x_2, y_2, z_2 = v.coordinates
+            new_coordinates = [ y_1*z_2 - y_2*z_1,
+                              -(x_1*z_2 - x_2*z_1),
+                                x_1*y_2 - x_2*y_1 ]
+            return Vector(new_coordinates)
+        except ValueError as e:
+            msg = str(e)
+            if msg == 'need more than 2 values to unpack' :
+                self_embedded_in_R3 = Vector(self.coordinates + (0,))
+                v_embedded_in_R3 = Vector(v.coordinates + (0,))
+                return self_embedded_in_R3.cross(v_embedded_in_R3)
+            elif (msg == 'too many values to unpack' or
+                  msg == 'need more than 1 value to unpack'):
+                raise Exception('Only denifed in 2 or 3 dimensions')
 
-v7 = Vector([-2.328, -7.284, -1.214])
-v8 = Vector([0,0,0])
-print (v7.is_parallel_to(v8))
-print (v7.is_orthogonal_to(v8))
+    # Finds out the area covered by the parallelogram
+    # formed by 2 Vectors
+    def area_of_parallelogram_with(self, v):
+        return self.cross(v).magnitude()
+
+    # Finds out the area covered by the rectangle
+    # formed by 2 Vectors. This area is half the
+    # area of the parallelogram formed by both Vectors
+    def area_of_triangle_with(self, v):
+        return self.area_of_parallelogram_with(v) / Decimal('2.0')
+
+v1 = Vector([8.462, 7.893, -8.187])
+v2 = Vector([6.984, -5.975, 4.778])
+print( v1.cross(v2))
+
+v3 = Vector([-8.987, -9.838, 5.031])
+v4 = Vector([-4.268, -1.861, -8.866])
+print( v3.area_of_parallelogram_with(v4) )
+
+v5 = Vector([1.5, 9.547, 3.691])
+v6 = Vector([-6.007, 0.124, 5.772])
+print( v5.area_of_triangle_with(v6) )
