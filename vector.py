@@ -168,6 +168,7 @@ class Vector(object):
     def area_of_triangle_with(self, v):
         return self.area_of_parallelogram_with(v) / Decimal('2.0')
 
+"""
 v1 = Vector([8.462, 7.893, -8.187])
 v2 = Vector([6.984, -5.975, 4.778])
 print( v1.cross(v2))
@@ -179,3 +180,7 @@ print( v3.area_of_parallelogram_with(v4) )
 v5 = Vector([1.5, 9.547, 3.691])
 v6 = Vector([-6.007, 0.124, 5.772])
 print( v5.area_of_triangle_with(v6) )
+
+v7 = Vector([1,2,3,4])
+print v7
+"""
